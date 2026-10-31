@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazfit Active 2 — Running Metrics Analyzer</title>
+
+  <!-- Typography: Plus Jakarta Sans (Headings & UI) + JetBrains Mono (Metrics & Telemetry) — NO Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Plotly.js para gráficos sincronizados e Marked.js para renderizar relatórios da IA -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    :root {
+      /* Deep Sports Dark Palette (Reference: site-references/Inspo1.webp) */
+      --bg-root: #0b0c10;
+      --bg-sidebar: #101217;
+      --bg-card: #14161e;
+      --bg-card-hover: #191c26;
+      --bg-surface-nested: #1a1d28;
+      --bg-input: #0e1015;
+
+      /* Precision Hairline Borders */
+      --border: #232530;
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-focus: rgba(255, 85, 0, 0.5);
+
+      /* High-Energy Athletic Orange (Main Color) */
+      --orange-primary: #ff5500;
+      --orange-hover: #ff6e26;
+      --orange-soft: rgba(255, 85, 0, 0.12);
+      --orange-border: rgba(255, 85, 0, 0.35);
+
+      /* Telemetry Accents */
+      --green-primary: #10b981;
+      --green-soft: rgba(16, 185, 129, 0.12);
+      --green-border: rgba(16, 185, 129, 0.3);
+      --amber-primary: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.12);
+      --coral-primary: #f43f5e;
+      --violet-primary: #818cf8;
+      --cyan-primary: #38bdf8;
+
+      /* High-Contrast Typography */
+      --text-hero: #f8fafc;
+      --text-main: #f1f5f9;
+      --text-body: #cbd5e1;
+      --text-muted: #848b9d;
+      --text-dim: #7d8597;
+
+      /* Depth & Lighting Tokens (Athletic Tactical Obsidian) */
+      --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+      --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 28px -4px rgba(0, 0, 0, 0.55);
+      --glow-orange: radial-gradient(circle at 95% 5%, rgba(255, 85, 0, 0.07), transparent 60%);
+
+      /* Font Families */
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Radii (Clean, Engineered Sports Hardware — No Bubbly Pills) */
+      --radius-card: 8px;
+      --radius-btn: 6px;
+      --radius-sm: 4px;
+    }
+
+    /* Custom Browser Surfaces & Scrollbars */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::selection { background: rgba(255, 85, 0, 0.35); color: #ffffff; }
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: var(--bg-root); }
+    ::-webkit-scrollbar-thumb { background: #232530; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--orange-primary); }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-root);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SVG Icon Utility */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke-width: 1.8;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .icon-lg { width: 20px; height: 20px; }
+    .icon-sm { width: 14px; height: 14px; }
+
+    /* ==========================================================================
+       SIDEBAR
+       ========================================================================== */
+    aside {
+      width: 320px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 18px;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-btn);
+      background: var(--orange-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(255, 85, 0, 0.35);
+    }
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-hero);
+      line-height: 1.2;
+    }
+    .brand-text span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--orange-primary);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: var(--radius-btn);
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover {
+      background: var(--bg-card);
+      color: var(--text-hero);
+    }
+    .nav-btn.active {
+      background: var(--orange-soft);
+      border-color: var(--orange-border);
+      color: var(--orange-primary);
+      font-weight: 700;
+    }
+    .nav-btn.active .icon { stroke: var(--orange-primary); }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .workout-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 2px;
+    }
+    .workout-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .workout-item:hover {
+      background: var(--bg-card-hover);
+      border-color: #3b3f52;
+    }
+    .workout-item.selected {
+      border-color: var(--orange-primary);
+      background: var(--orange-soft);
+      box-shadow: inset 0 0 0 1px var(--orange-primary);
+    }
+    .workout-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .workout-item.selected .workout-item-header { color: var(--text-hero); }
+    .workout-item-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-hero);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    .workout-item-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-body);
+    }
+    .workout-item-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ==========================================================================
+       MAIN VIEWPORT
+       ========================================================================== */
+    main {
+      flex: 1;
+      padding: 28px 36px;
+      overflow-y: auto;
+      max-width: 1500px;
+    }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* Top Hero Header */
+    .top-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .top-banner h2 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-hero);
+    }
+    .top-banner p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Badges & Chips */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+    }
+    .badge-orange { background: var(--orange-soft); color: var(--orange-primary); border: 1px solid var(--orange-border); }
+    .badge-good { background: var(--green-soft); color: #34d399; border: 1px solid var(--green-border); }
+    .badge-warn { background: var(--amber-soft); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .badge-info { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .badge-neutral { background: var(--bg-surface-nested); color: var(--text-muted); border: 1px solid var(--border); }
+
+    /* Buttons */
+    .btn {
+      background: var(--orange-primary);
+      color: #ffffff;
+      border: 1px solid transparent;
+      padding: 10px 18px;
+      min-height: 42px;
+      border-radius: var(--radius-btn);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .btn:hover { background: var(--orange-hover); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: var(--bg-surface-nested);
+      border: 1px solid var(--border);
+      color: var(--text-body);
+    }
+    .btn-secondary:hover {
+      background: #222533;
+      border-color: #3b3f52;
+      color: var(--text-hero);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--glow-orange), var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow-card);
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-hero);
+      letter-spacing: -0.01em;
+    }
+    .card-title span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Didactic Metric Cards (Reference: Inspo1.webp) */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .metric-card {
+      background: radial-gradient(circle at 95% 5%, rgba(255, 85, 0, 0.04), transparent 50%), var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-card);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .metric-card:hover {
+      border-color: #3b3f52;
+      box-shadow: var(--shadow-card-hover);
+    }
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .metric-header span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .metric-body {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-hero);
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .sparkline-svg {
+      width: 105px;
+      height: 32px;
+      overflow: visible;
+      flex-shrink: 0;
+    }
+    .metric-sub {
+      font-size: 12px;
+      color: var(--text-body);
+      line-height: 1.45;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 8px;
+    }
+    .metric-sub strong { color: var(--text-hero); }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+    th, td {
+      padding: 11px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--bg-surface-nested);
+    }
+    tr:hover td { background: rgba(255, 255, 255, 0.015); }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-hero);
+      padding: 10px 14px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--orange-primary);
+      box-shadow: 0 0 0 1px var(--orange-primary);
+    }
+    textarea { resize: vertical; min-height: 72px; }
+
+    /* Two-Col Grid */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 1150px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    /* ==========================================================================
+       AI COACH COCKPIT (Reference: Inspo1.webp & a0df983e...)
+       ========================================================================== */
+    .ai-studio-card {
+      background: radial-gradient(circle at 95% 5%, rgba(255, 85, 0, 0.08), transparent 60%), var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--orange-primary);
+      border-radius: var(--radius-card);
+      padding: 22px 24px;
+      margin-bottom: 22px;
+      position: relative;
+      box-shadow: var(--shadow-card);
+    }
+    .ai-studio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .ai-studio-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ai-studio-title h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-hero);
+      letter-spacing: -0.02em;
+    }
+
+    /* Quick Interactive Action Chips (Reference: a0df983e...) */
+    .ai-quick-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .ai-quick-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .ai-chip {
+      background: var(--bg-surface-nested);
+      border: 1px solid var(--border);
+      color: var(--text-body);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .ai-chip:hover {
+      background: var(--orange-soft);
+      border-color: var(--orange-border);
+      color: var(--orange-primary);
+      transform: translateY(-1px);
+    }
+
+    .ai-telemetry-bar {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      padding: 9px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--orange-primary);
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .ai-report-wrapper {
+      position: relative;
+    }
+    .ai-report-box {
+      line-height: 1.7;
+      font-size: 14px;
+      color: var(--text-body);
+      max-width: 950px;
+      transition: max-height 0.3s ease;
+    }
+    .ai-report-box.collapsed {
+      max-height: 420px;
+      overflow: hidden;
+      mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    }
+    .ai-expand-bar {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+      padding-top: 8px;
+    }
+
+    .ai-report-box h1, .ai-report-box h2, .ai-report-box h3 {
+      color: var(--text-hero);
+      border-left: 3px solid var(--orange-primary);
+      padding-left: 12px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .ai-report-box h1 { font-size: 18px; }
+    .ai-report-box h2 { font-size: 16px; }
+    .ai-report-box h3 { font-size: 14px; }
+    .ai-report-box ul, .ai-report-box ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+    .ai-report-box li { margin-bottom: 6px; }
+    .ai-report-box p { margin-bottom: 12px; }
+    .ai-report-box strong { color: var(--text-hero); font-weight: 700; }
+    .ai-report-box code {
+      background: var(--bg-surface-nested);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--orange-primary);
+    }
+
+    /* Segmented Equalizer Matrix (Reference: Inspo1.webp) */
+    .equalizer-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-surface-nested);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .equalizer-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+      min-width: 58px;
+    }
+    .equalizer-bars {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 3px;
+      width: 100%;
+      height: 70px;
+      justify-content: flex-start;
+    }
+    .equalizer-segment {
+      height: 8px;
+      border-radius: 2px;
+      background: #232530;
+      transition: background 0.2s;
+    }
+    .equalizer-segment.active-z1 { background: #38bdf8; }
+    .equalizer-segment.active-z2 { background: #10b981; }
+    .equalizer-segment.active-z3 { background: #f59e0b; }
+    .equalizer-segment.active-z4 { background: #ff5500; }
+    .equalizer-segment.active-z5 { background: #f43f5e; box-shadow: 0 0 6px rgba(244, 63, 94, 0.6); }
+    .equalizer-label {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .equalizer-val {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-hero);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .recovery-drop-meter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #34d399;
+      background: var(--green-soft);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--green-border);
+    }
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--orange-primary);
+    }
+
+    /* Chat Messages Box */
+    .chat-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+    .chat-messages {
+      max-height: 380px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+    .chat-bubble-user {
+      background: var(--bg-surface-nested);
+      border: 1px solid var(--border);
+      border-right: 3px solid var(--orange-primary);
+      padding: 12px 16px;
+      border-radius: var(--radius-btn);
+      align-self: flex-end;
+      max-width: 80%;
+      font-size: 13px;
+      color: var(--text-hero);
+    }
+    .chat-bubble-coach {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: var(--radius-btn);
+      align-self: flex-start;
+      max-width: 90%;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .chat-bubble-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--orange-primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <!-- ========================================================================
+       BARRA LATERAL / SIDEBAR
+       ======================================================================== -->
+  <aside>
+    <div class="brand">
+      <div class="brand-icon">
+        <!-- SVG Running Icon -->
+        <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M13 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="m10 17 3-3-2-4 4-2 3 3"/><path d="M5 21l5-4"/><path d="M14 14l-2 7"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>Amazfit Active 2</h1>
+        <span>Metrics Studio</span>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-btn active" onclick="switchTab('workout')">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Análise do Treino
+      </button>
+      <button class="nav-btn" onclick="switchTab('upload')">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+        Subir Novo .FIT
+      </button>
+      <button class="nav-btn" onclick="switchTab('evolution')">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Evolução &amp; Histórico
+      </button>
+      <button class="nav-btn" onclick="switchTab('profile')">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Perfil &amp; Rotina
+      </button>
+    </div>
+
+    <div class="sidebar-section-title">
+      <span>Histórico SQLite</span>
+      <span style="color:var(--orange-primary);"><svg class="icon icon-sm" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>
+    </div>
+    <div class="workout-list" id="sidebar-workout-list">
+      <!-- Populado via dashboard.js -->
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       CONTEÚDO PRINCIPAL
+       ======================================================================== -->
+  <main>
+    <!-- ABA 1: ANÁLISE DO TREINO SELECIONADO -->
+    <section id="tab-workout" class="view-section active">
+      <div class="top-banner">
+        <div>
+          <h2 id="w-title">Carregando treino...</h2>
+          <p id="w-subtitle"></p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <span id="w-type-badge" class="badge badge-orange"></span>
+          <button class="btn btn-secondary" onclick="toggleContextEditor()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            Editar Contexto / RPE
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor rápido de contexto do treino -->
+      <div id="context-editor-card" class="card" style="display:none;">
+        <div class="card-title">
+          <span>Ajustar Contexto da Sessão (Calibra a Análise da IA)</span>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>Tipo do Treino (Sua Rotina Seg/Qua/Sex)</label>
+            <select id="edit-workout-type">
+              <option value="Rodagem (5 km)">Rodagem Leve (5 km)</option>
+              <option value="Treino Longo (10–15 km)">Treino Longo (10–15 km)</option>
+              <option value="Intervalado / Tiros">Intervalado / Tiros (Quarta Forte)</option>
+              <option value="Fartlek">Fartlek (Quarta Forte)</option>
+              <option value="Teste / Prova">Teste / Prova</option>
+            </select>
+          </div>
+          <div>
+            <label>Sensação de Esforço (RPE 1 a 10)</label>
+            <input type="number" id="edit-rpe" min="1" max="10" placeholder="Ex: 8" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Observações do Dia (Clima, sono, dores, companhia)</label>
+            <input type="text" id="edit-notes" placeholder="Ex: Sol forte, fiz tiros com meu amigo..." />
+          </div>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <button class="btn" onclick="saveWorkoutContext()">Salvar Contexto no SQLite</button>
+          <button class="btn btn-secondary" onclick="toggleContextEditor()">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Cartões Didáticos das Métricas -->
+      <div class="metrics-grid" id="didactic-metrics-grid"></div>
+
+      <!-- PAINEL DO TREINADOR IA (COCKPIT INTERATIVO ESTÉTICA REFERENCES) -->
+      <div class="ai-studio-card">
+        <div class="ai-studio-header">
+          <div class="ai-studio-title">
+            <span class="badge badge-orange">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              AI COACH COCKPIT
+            </span>
+            <h3>Treinador Especializado em Fisiologia &amp; Biomecânica</h3>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" id="btn-generate-ai" onclick="generateAIReport(false)">
+              <svg class="icon" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+              Gerar Análise
+            </button>
+            <button class="btn btn-secondary" id="btn-regenerate-ai" onclick="generateAIReport(true)">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              Regerar na API
+            </button>
+          </div>
+        </div>
+
+        <!-- Chips de Ações Rápidas (Referência a0df983e...) -->
+        <div class="ai-quick-chips">
+          <span class="ai-quick-label">Perguntas Rápidas:</span>
+          <button class="ai-chip" onclick="askQuickPrompt('Como foi minha cadência e passada neste treino? Fui biomecanicamente eficiente?')">
+            ⚡ Cadência &amp; Passada
+          </button>
+          <button class="ai-chip" onclick="askQuickPrompt('Analise a minha deriva cardíaca e nível de fadiga ao longo da sessão')">
+            ❤️ Deriva Cardíaca &amp; Fadiga
+          </button>
+          <button class="ai-chip" onclick="askQuickPrompt('Os meus tiros e intervalos de descanso foram consistentes? Onde oscilei?')">
+            ⏱️ Consistência dos Tiros
+          </button>
+          <button class="ai-chip" onclick="askQuickPrompt('Com base neste treino e no meu histórico recente, o que devo fazer no próximo treino?')">
+            👟 Próximo Treino Recomendado
+          </button>
+        </div>
+
+        <div id="ai-tools-indicator" class="ai-telemetry-bar"></div>
+
+        <div class="ai-report-wrapper">
+          <div id="ai-report-container" class="ai-report-box collapsed">
+            <p style="color:var(--text-muted);">Clique em <strong>"Gerar Análise"</strong> acima para o Gemini processar os dados deste treino e compará-lo com seu histórico no banco SQLite.</p>
+          </div>
+          <div class="ai-expand-bar" id="ai-expand-bar" style="display:none;">
+            <button class="btn btn-secondary" id="btn-toggle-report" onclick="toggleReportExpansion()" style="padding:6px 14px; min-height:34px; font-size:12px;">
+              <span id="text-toggle-report">Ver Relatório Completo</span>
+              <svg class="icon" id="icon-toggle-report" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabelas e Equalizador de Tiros/Blocos e Semáforos -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">
+            <span>
+              <svg class="icon" style="stroke:var(--orange-primary);" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              Blocos Contínuos / Tiros Reais (&gt; 60s)
+            </span>
+            <span class="badge badge-info" id="blocks-count-badge"></span>
+          </div>
+
+          <!-- Segmented Equalizer Matrix (Inspo1.webp) -->
+          <div id="blocks-equalizer" class="equalizer-container" style="display:none;"></div>
+
+          <div style="overflow-x:auto;">
+            <table id="blocks-table">
+              <thead>
+                <tr>
+                  <th>Bloco</th>
+                  <th>Distância</th>
+                  <th>Duração</th>
+                  <th>Pace</th>
+                  <th>FC Média/Máx</th>
+                  <th>Potência</th>
+                  <th>Cadência</th>
+                  <th>Passada</th>
+                  <th>Solo</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>
+              <svg class="icon" style="stroke:var(--green-primary);" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="16" r="1.5"/></svg>
+              Filtro de Pausas (Semáforos vs. Descansos)
+            </span>
+            <span class="badge badge-good" id="pauses-badge"></span>
+          </div>
+          <p id="pauses-summary-text" style="font-size:12px; font-family:var(--font-mono); color:var(--text-muted); margin-bottom:12px;"></p>
+          <div style="overflow-x:auto;">
+            <table id="pauses-table">
+              <thead>
+                <tr>
+                  <th>Parada &gt; 60s</th>
+                  <th>No Km</th>
+                  <th>Duração</th>
+                  <th>FC Início</th>
+                  <th>FC Fim</th>
+                  <th>Recuperação (Drop)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos Interativos com Cores Esportivas Modernas -->
+      <div class="card">
+        <div class="card-title">
+          <span>
+            <svg class="icon" style="stroke:var(--orange-primary);" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            Série Temporal Sincronizada (Pace × FC × Altimetria × Cadência)
+          </span>
+        </div>
+        <div id="chart-timeseries" style="width:100%; height:440px;"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">
+            <span>
+              <svg class="icon" style="stroke:var(--orange-primary);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Parciais por Quilômetro (Splits 1 km + Elevação)
+            </span>
+          </div>
+          <div id="chart-splits" style="width:100%; height:300px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>
+              <svg class="icon" style="stroke:var(--coral-primary);" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Tempo nas Zonas de Frequência Cardíaca
+            </span>
+          </div>
+          <div id="chart-zones" style="width:100%; height:300px;"></div>
+        </div>
+      </div>
+
+      <!-- Chat Interativo com o Treinador IA -->
+      <div class="chat-container">
+        <div class="card-title">
+          <span>
+            <svg class="icon" style="stroke:var(--orange-primary);" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Conversar com o Treinador IA (Consulta seu histórico SQLite)
+          </span>
+        </div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="chat-input" placeholder="Ex: Por que minha cadência caiu na subida? Como foi a recuperação cardíaca perto do meu treino passado?" onkeydown="if(event.key==='Enter') sendChatMessage()" />
+          <button class="btn" id="btn-chat-send" onclick="sendChatMessage()">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Enviar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: SUBIR NOVO ARQUIVO .FIT -->
+    <section id="tab-upload" class="view-section">
+      <div class="top-banner">
+        <div>
+          <h2>Importar Arquivo .FIT (Amazfit Active 2)</h2>
+          <p>Envie o arquivo exportado pelo Zepp. O motor filtra semáforos &le; 60s e detecta automaticamente o tipo de treino.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="form-grid">
+          <div style="grid-column: 1 / -1;">
+            <label>1. Selecione um ou múltiplos arquivos .FIT</label>
+            <input type="file" id="fit-file-input" accept=".fit,.FIT" multiple onchange="previewFitFile()" />
+          </div>
+          <div>
+            <label>2. Tipo do Treino (Para arquivo único)</label>
+            <select id="upload-workout-type">
+              <option value="Rodagem (5 km)">Rodagem Leve (5 km)</option>
+              <option value="Treino Longo (10–15 km)">Treino Longo (10–15 km)</option>
+              <option value="Intervalado / Tiros">Intervalado / Tiros (Quarta Forte)</option>
+              <option value="Fartlek">Fartlek (Quarta Forte)</option>
+              <option value="Teste / Prova">Teste / Prova</option>
+            </select>
+          </div>
+          <div>
+            <label>3. Esforço Percebido (RPE 1 a 10 - Opcional)</label>
+            <input type="number" id="upload-rpe" min="1" max="10" placeholder="Ex: 7" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>4. Observações da Sessão (Clima, percurso, dores)</label>
+            <textarea id="upload-notes" placeholder="Ex: Quarta-feira de tiros na pista com meu amigo, sensação de pernas leves..."></textarea>
+          </div>
+        </div>
+        <div id="upload-preview-box" style="margin-top:14px; font-size:12px; font-family:var(--font-mono); color:var(--orange-primary); display:none;"></div>
+        <div style="margin-top:18px;">
+          <button class="btn" id="btn-upload-submit" onclick="submitFitUpload()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            Processar &amp; Salvar no SQLite
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: EVOLUÇÃO & HISTÓRICO -->
+    <section id="tab-evolution" class="view-section">
+      <div class="top-banner">
+        <div>
+          <h2>Panorama de Evolução &amp; Eficiência Aeróbica</h2>
+          <p>Acompanhe o Fator de Eficiência Aeróbica (Velocidade / FC), cadência e volume acumulado.</p>
+        </div>
+      </div>
+      <div class="metrics-grid" id="evolution-summary-cards"></div>
+      <div class="card">
+        <div class="card-title">
+          <span>
+            <svg class="icon" style="stroke:var(--orange-primary);" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Fator de Eficiência Aeróbica (Velocidade / FC) &amp; Frequência Cardíaca Média
+          </span>
+        </div>
+        <div id="chart-evolution" style="width:100%; height:380px;"></div>
+      </div>
+    </section>
+
+    <!-- ABA 4: PERFIL DO CORREDOR -->
+    <section id="tab-profile" class="view-section">
+      <div class="top-banner">
+        <div>
+          <h2>Perfil Fisiológico &amp; Rotina Semanal</h2>
+          <p>Dados de idade, peso e frequência cardíaca máxima/repouso calibram as zonas de esforço e o Treinador IA.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div>
+            <label>Nome do Corredor</label>
+            <input type="text" id="prof-name" />
+          </div>
+          <div>
+            <label>Idade (anos)</label>
+            <input type="number" id="prof-age" />
+          </div>
+          <div>
+            <label>Peso (kg)</label>
+            <input type="number" step="0.1" id="prof-weight" />
+          </div>
+          <div>
+            <label>FC Máxima Conhecida (bpm)</label>
+            <input type="number" id="prof-max-hr" />
+          </div>
+          <div>
+            <label>FC de Repouso (bpm)</label>
+            <input type="number" id="prof-rest-hr" />
+          </div>
+          <div>
+            <label>Experiência na Corrida (meses)</label>
+            <input type="number" id="prof-exp" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Descrição da Rotina Semanal (Seg / Qua / Sex)</label>
+            <textarea id="prof-routine"></textarea>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Objetivos Atuais</label>
+            <textarea id="prof-goals"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:18px; display:flex; align-items:center; gap:12px;">
+          <button class="btn" onclick="saveProfile()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Perfil
+          </button>
+          <span id="prof-save-msg" style="font-size:12px; font-family:var(--font-mono); color:var(--green-primary);"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

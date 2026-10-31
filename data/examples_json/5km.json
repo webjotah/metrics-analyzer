@@ -1,0 +1,173 @@
+{
+  "workout_id": "20261023_071024_rodagem_5_km",
+  "metadata": {
+    "source_file": "5km.fit",
+    "date": "2026-10-23T07:10:24",
+    "day_of_week": "Friday",
+    "device": "Amazfit Active 2",
+    "workout_type_detected": "Rodagem (5 km)",
+    "workout_type_confirmed": "Rodagem (5 km)",
+    "user_context": {
+      "rpe_effort_1_to_10": null,
+      "weather_or_notes": ""
+    }
+  },
+  "summary": {
+    "total_distance_km": 5.01,
+    "active_timer_time_sec": 1592,
+    "active_timer_formatted": "26:32",
+    "total_elapsed_time_sec": 1941,
+    "total_elapsed_formatted": "32:21",
+    "avg_pace_min_km": "5:18",
+    "max_pace_min_km": "3:51",
+    "calories_kcal": 335,
+    "elevation_gain_m": 7,
+    "elevation_loss_m": 8
+  },
+  "physiology": {
+    "avg_hr_bpm": 170,
+    "max_hr_bpm": 192,
+    "min_hr_bpm": 94,
+    "training_effect_aerobic": 3.4,
+    "training_effect_anaerobic": 1.9,
+    "training_load_score": 134,
+    "cardiac_drift_pct": 1.0,
+    "hr_zones_time_sec": {
+      "z1_warmup": 24,
+      "z2_fat_burn": 67,
+      "z3_aerobic": 178,
+      "z4_threshold": 1022,
+      "z5_anaerobic_max": 297
+    }
+  },
+  "biomechanics_running_dynamics": {
+    "avg_cadence_spm": 168,
+    "max_cadence_spm": 186,
+    "avg_step_length_m": 1.12,
+    "avg_vertical_oscillation_cm": 7.46,
+    "avg_vertical_ratio_pct": 6.7,
+    "avg_ground_contact_time_ms": 262,
+    "avg_power_watts": 240,
+    "max_power_watts": 332
+  },
+  "pauses_analysis": {
+    "traffic_lights_under_60s": {
+      "count": 0,
+      "total_time_sec": 0,
+      "durations_sec": []
+    },
+    "rest_stops_over_60s": {
+      "count": 2,
+      "total_time_sec": 348,
+      "stops": [
+        {
+          "after_km": 2.17,
+          "duration_sec": 181,
+          "duration_formatted": "3:01",
+          "hr_at_stop": 178,
+          "hr_at_resume": 117,
+          "hr_recovery_drop": 61
+        },
+        {
+          "after_km": 4.01,
+          "duration_sec": 167,
+          "duration_formatted": "2:47",
+          "hr_at_stop": 183,
+          "hr_at_resume": 117,
+          "hr_recovery_drop": 66
+        }
+      ]
+    }
+  },
+  "active_blocks_or_intervals": [
+    {
+      "block_number": 1,
+      "distance_m": 2174,
+      "duration_sec": 691,
+      "duration_formatted": "11:31",
+      "pace_min_km": "5:18",
+      "avg_hr_bpm": 167,
+      "max_hr_bpm": 182,
+      "avg_power_w": 241,
+      "avg_cadence_spm": 167,
+      "avg_step_length_m": 1.14,
+      "avg_vertical_oscillation_cm": 7.38,
+      "avg_ground_contact_ms": 268
+    },
+    {
+      "block_number": 2,
+      "distance_m": 1830,
+      "duration_sec": 594,
+      "duration_formatted": "9:54",
+      "pace_min_km": "5:25",
+      "avg_hr_bpm": 173,
+      "max_hr_bpm": 185,
+      "avg_power_w": 239,
+      "avg_cadence_spm": 167,
+      "avg_step_length_m": 1.09,
+      "avg_vertical_oscillation_cm": 7.44,
+      "avg_ground_contact_ms": 264
+    },
+    {
+      "block_number": 3,
+      "distance_m": 999,
+      "duration_sec": 306,
+      "duration_formatted": "5:06",
+      "pace_min_km": "5:06",
+      "avg_hr_bpm": 170,
+      "max_hr_bpm": 192,
+      "avg_power_w": 243,
+      "avg_cadence_spm": 173,
+      "avg_step_length_m": 1.14,
+      "avg_vertical_oscillation_cm": 7.69,
+      "avg_ground_contact_ms": 247
+    }
+  ],
+  "splits_per_km": [
+    {
+      "km": 1,
+      "distance_m": 1000,
+      "pace_min_km": "5:14",
+      "avg_hr_bpm": 156,
+      "avg_cadence_spm": 166,
+      "elev_gain_m": 0,
+      "elev_loss_m": 0
+    },
+    {
+      "km": 2,
+      "distance_m": 1000,
+      "pace_min_km": "5:23",
+      "avg_hr_bpm": 174,
+      "avg_cadence_spm": 167,
+      "elev_gain_m": 1,
+      "elev_loss_m": 0
+    },
+    {
+      "km": 3,
+      "distance_m": 1000,
+      "pace_min_km": "5:22",
+      "avg_hr_bpm": 166,
+      "avg_cadence_spm": 171,
+      "elev_gain_m": 0,
+      "elev_loss_m": 2
+    },
+    {
+      "km": 4,
+      "distance_m": 1000,
+      "pace_min_km": "5:24",
+      "avg_hr_bpm": 181,
+      "avg_cadence_spm": 166,
+      "elev_gain_m": 4,
+      "elev_loss_m": 2
+    },
+    {
+      "km": 5,
+      "distance_m": 1000,
+      "pace_min_km": "5:05",
+      "avg_hr_bpm": 170,
+      "avg_cadence_spm": 175,
+      "elev_gain_m": 1,
+      "elev_loss_m": 2
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+# ==============================================================================
+# AMBIENTE, CHAVES SECRETAS E CREDENCIAIS (NUNCA SUBIR)
+# ==============================================================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ==============================================================================
+# PYTHON / AMBIENTES VIRTUAIS
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==============================================================================
+# DADOS LOCAIS E ARQUIVOS TEMPORÁRIOS
+# ==============================================================================
+# Banco SQLite local (gerado dinamicamente para não sobrescrever treinos pessoais)
+data/runs.db
+*.db
+*.sqlite3
+
+# ==============================================================================
+# ARQUIVOS DE SISTEMA OPERACIONAL E IDES
+# ==============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
